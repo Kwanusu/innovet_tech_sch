@@ -132,7 +132,7 @@ class Task(models.Model):
     due_date = models.DateTimeField()
     weight = models.IntegerField(default=10)
 
-class TaskSubmission(models.py):
+class TaskSubmission(models.Model):
     """Records the work submitted by a student for a specific Task."""
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='submissions')
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
