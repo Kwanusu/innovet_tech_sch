@@ -19,5 +19,5 @@ class SystemLogSerializer(serializers.ModelSerializer):
             'id', 'action', 'user', 'user_name', 
             'timestamp', 'formatted_time', 'details'
         ]
-        # Audit logs are immutable by design to ensure data integrity
+        
         read_only_fields = fields

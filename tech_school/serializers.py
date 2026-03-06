@@ -12,7 +12,6 @@ class UserSerializer(serializers.ModelSerializer):
     Includes role-based logic for the Redux frontend.
     """
     role_display = serializers.CharField(source='get_role_display', read_only=True)
-    # Exposing the @property you created in the model
     is_teacher = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -22,7 +21,6 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name', 'role', 'role_display', 
             'is_teacher', 'bio', 'date_joined'
         ]
-        # Professional standard: Prevent role escalation via general profile updates
         read_only_fields = ['role', 'username', 'date_joined']
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -41,7 +39,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password', 'first_name', 'last_name', 'role', 'bio']
 
     def create(self, validated_data):
-        # Professional Standard: Use create_user to hash the password
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
