@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { login, clearAuthError } from '../features/auth/authSlice';
+import { login, clearAuthError } from '../components/auth/authSlice';
 import { Lock, User, Loader2, AlertCircle, School, CheckCircle2, Dot } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";

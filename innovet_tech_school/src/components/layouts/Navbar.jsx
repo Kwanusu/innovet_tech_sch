@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { logout } from '../../features/auth/authSlice';
+import { logout } from '../auth/authSlice';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCourses, fetchSubmissions } from '../../features/school/schoolSlice';
+import { fetchCourses, fetchSubmissions } from '../../school/schoolSlice';
 import { useNavigate } from 'react-router-dom';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

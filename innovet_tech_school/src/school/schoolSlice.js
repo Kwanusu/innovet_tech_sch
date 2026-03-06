@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import API from '../../api/axiosConfig.js';
+import API from '../api/axiosConfig';
 
 const handleAsyncError = (error, rejectWithValue) => {
     return rejectWithValue(error.response?.data || "A server error occurred");

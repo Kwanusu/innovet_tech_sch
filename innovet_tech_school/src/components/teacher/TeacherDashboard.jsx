@@ -5,11 +5,11 @@ import {
   fetchCourses, 
   deleteCourse, 
   updateCourse 
-} from '../../features/school/schoolSlice';
+} from '../../school/schoolSlice';
 
 // --- Components ---
 import GradingModal from './GradingModal';
-import EnrollmentModal from './EnrolModal'; 
+import EnrollmentModal from '../teacher/EnrolmentModal'; 
 import CourseCreateForm from '../courses/CourseManager'; 
 
 // --- Shadcn UI ---
