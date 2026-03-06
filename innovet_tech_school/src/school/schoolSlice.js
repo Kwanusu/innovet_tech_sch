@@ -70,6 +70,18 @@ export const gradeSubmission = createAsyncThunk('school/gradeSubmission', async 
     }
 });
 
+export const markLessonComplete = createAsyncThunk(
+  'school/markLessonComplete',
+  async ({ courseId, lessonId }, { rejectWithValue }) => {
+    try {
+      const response = await API.post(`/api/courses/${courseId}/lessons/${lessonId}/complete/`);
+      return { lessonId, progress: response.data }; // Returning lessonId to update local array
+    } catch (err) {
+      return rejectWithValue(err.response?.data);
+    }
+  }
+);
+
 const schoolSlice = createSlice({
     name: 'school',
     initialState: {
@@ -123,7 +135,13 @@ const schoolSlice = createSlice({
             .addCase(gradeSubmission.fulfilled, (state, action) => {
                 const index = state.submissions.findIndex(s => s.id === action.payload.id);
                 if (index !== -1) state.submissions[index] = action.payload;
-            });
+            })
+
+            .addCase(markLessonComplete.fulfilled, (state, action) => {
+                if (!state.completedLessons.includes(action.payload.lessonId)) {
+                    state.completedLessons.push(action.payload.lessonId);
+                }
+            })
     }
 });
 

@@ -100,13 +100,21 @@ REST_FRAMEWORK = {
 
 
 
-# JWT Settings integration
-
+# JWT integration
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=config('ACCESS_TOKEN_LIFETIME_MINS', default=60, cast=int)),
-    'SIGNING_KEY': config('JWT_SECRET_KEY', default=SECRET_KEY), # Fallback to SECRET_KEY if not set
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'AUTH_COOKIE': 'access_token',      
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_DOMAIN': None,         
+    'AUTH_COOKIE_SECURE': False,        
+    'AUTH_COOKIE_HTTP_ONLY': True,    
+    'AUTH_COOKIE_PATH': '/',
+    'AUTH_COOKIE_SAMESITE': 'Lax',   
 }
 
 
@@ -115,7 +123,6 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API for managing teachers, students, courses, and analytics.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    # This ensures your JWT "Authorize" button appears in Swagger
     'COMPONENT_SPLIT_PATCH': True,
     'COMPONENT_SPLIT_REQUEST': True,
 }
