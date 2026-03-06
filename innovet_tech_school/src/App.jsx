@@ -5,6 +5,7 @@ import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentDashboard from './components/student/StudentDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Navbar from './components/layouts/Navbar';
+import LessonDetailPage from './pages/LessonDetail';
 
 function App() {
   return (

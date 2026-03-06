@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { enrollStudent } from '../../features/school/schoolSlice';
+import { enrollStudent } from '../../school/schoolSlice';
 import { 
   UserPlus, 
   Mail, 

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCourseById, markLessonComplete } from '../../features/school/schoolSlice';
-import LessonSidebar from '../../components/learning/LessonSidebar';
-import LessonNavigationFooter from '../../components/learning/LessonNavigationFooter';
+import { fetchCourseById, markLessonComplete } from '../school/schoolSlice';
+import LessonSidebar from '../pages/Sidebar';
+import LessonNavigationFooter from '../pages/LessonNavigationFooter';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

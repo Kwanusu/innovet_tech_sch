@@ -10,7 +10,7 @@ import {
 // --- Components ---
 import GradingModal from './GradingModal';
 import EnrollmentModal from '../teacher/EnrolmentModal'; 
-import CourseCreateForm from '../courses/CourseManager'; 
+import CourseCreateForm from '../../components/courses/CourseCreationForm'; 
 
 // --- Shadcn UI ---
 import { 

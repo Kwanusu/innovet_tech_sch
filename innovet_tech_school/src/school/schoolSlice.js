@@ -52,6 +52,23 @@ export const updateCourse = createAsyncThunk('school/updateCourse', async ({ id,
     }
 });
 
+export const enrollStudent = createAsyncThunk(
+  "school/enrollStudent",
+  async ({ courseId, email }, { rejectWithValue }) => {
+    try {
+    
+      const response = await API.post(`/courses/${courseId}/enroll/`, { email });
+      
+      
+      return { courseId, student: response.data }; 
+    } catch (err) {
+    
+      const message = err.response?.data?.detail || err.response?.data?.message || "Enrollment failed";
+      return rejectWithValue(message);
+    }
+  }
+);
+
 export const fetchSubmissions = createAsyncThunk('school/fetchSubmissions', async (_, { rejectWithValue }) => {
     try {
         const response = await API.get('/api/submissions/');
@@ -127,6 +144,22 @@ const schoolSlice = createSlice({
             .addCase(deleteCourse.fulfilled, (state, action) => {
                 state.instructorCourses = state.instructorCourses.filter(c => c.id !== action.payload);
                 if (state.currentCourse?.id === action.payload) state.currentCourse = null;
+            })
+
+            .addCase(enrollStudent.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(enrollStudent.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                
+                if (state.currentCourse && state.currentCourse.id === action.payload.courseId) {
+
+                // state.currentCourse.enrolled_count += 1;
+                }
+            })
+            .addCase(enrollStudent.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
             })
 
             .addCase(fetchSubmissions.fulfilled, (state, action) => {
