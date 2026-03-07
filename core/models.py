@@ -86,6 +86,7 @@ class Lesson(models.Model):
     topic = models.ForeignKey(Topic, related_name='lessons', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     content = models.TextField(help_text="The actual reading/video material")
+    video_url = models.URLField(blank=True, null=True)
     lesson_type = models.CharField(max_length=20, choices=LESSON_TYPES, default='LESSON')
     order = models.PositiveIntegerField(default=0)
 
@@ -94,7 +95,42 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"[{self.lesson_type}] {self.title}"
+    
+class LessonProgress(models.Model):
+    """
+    Tracks a specific user's completion status for an individual lesson.
+    
+    This acts as a 'through' table between Users and Lessons, allowing 
+    the system to maintain unique progress states for every student.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='lesson_progress',
+        help_text="The student whose progress is being tracked."
+    )
+    lesson = models.ForeignKey(
+        'Lesson', 
+        on_delete=models.CASCADE, 
+        related_name='user_progress',
+        help_text="The specific lesson being completed."
+    )
+    is_completed = models.BooleanField(
+        default=False,
+        help_text="True if the student has finished the lesson content."
+    )
+    completed_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The exact timestamp when the lesson was first marked complete."
+    )
 
+    class Meta:
+        unique_together = ('user', 'lesson')
+        verbose_name_plural = "Lesson Progresses"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.lesson.title} ({'Done' if self.is_completed else 'Pending'})"
+    
 class Enrollment(models.Model):
     """Tracking model for student enrollment, specific grades, and timestamps."""
     student = models.ForeignKey(

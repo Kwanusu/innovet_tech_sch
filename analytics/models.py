@@ -18,11 +18,9 @@ class SystemLog(models.Model):
     )
     timestamp = models.DateTimeField(
         auto_now_add=True,
-        db_index=True  # Index for faster querying on high-volume logs
+        db_index=True 
     )
-    
-    # JSONField allows for flexible 'snapshots' of data without 
-    # needing a rigid schema for every type of log.
+
     details = models.JSONField(
         default=dict, 
         help_text="Stores structural data like {'old_price': 20, 'new_price': 15}."

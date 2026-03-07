@@ -12,7 +12,7 @@ class SystemLogSerializer(serializers.ModelSerializer):
         format="%Y-%m-%d %H:%M:%S", 
         read_only=True
     )
-
+    severity = serializers.SerializerMethodField()
     class Meta:
         model = SystemLog
         fields = [
@@ -21,3 +21,12 @@ class SystemLogSerializer(serializers.ModelSerializer):
         ]
         
         read_only_fields = fields
+        
+
+    def get_severity(self, obj):
+        """Maps actions to UI color schemes."""
+        if 'delete' in obj.action.lower():
+            return 'error'  # Red in UI
+        if 'update' in obj.action.lower():
+            return 'warning' # Amber in UI
+        return 'info' # Blue in UI

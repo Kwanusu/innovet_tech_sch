@@ -3,11 +3,14 @@ from django.db.models import Avg
 from rest_framework import serializers
 from .models import (
     Course, Enrollment, CalendarEvent, Task, 
-    TaskSubmission, Department, Topic, Lesson
-)
+    TaskSubmission, Department, Topic, Lesson, LessonProgress
+) 
 from analytics.models import SystemLog
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from django.utils.crypto import get_random_string
 
-# --- Supporting Serializers ---
+User = get_user_model()
 
 class DepartmentSerializer(serializers.ModelSerializer):
     """Provides metadata for academic department categorization."""
@@ -88,11 +91,54 @@ class CourseSerializer(serializers.ModelSerializer):
         return data 
 
 class LessonSerializer(serializers.ModelSerializer):
-    """Detailed representation of a specific learning unit."""
+    """ Serializes individual Lesson data including user-specific completion status."""
+    is_completed = serializers.SerializerMethodField()
+
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'lesson_type', 'order']
+        fields = ['id', 'title', 'content', 'video_url', 'lesson_type', 'order', 'is_completed']
 
+    def get_is_completed(self, obj) -> bool:
+        """
+        Determines if the requesting user has completed this specific lesson.
+        
+        Returns:
+            bool: True if a 'completed' LessonProgress record exists for the user.
+        """
+        user = self.context.get('request').user
+        if user and user.is_authenticated:
+            return LessonProgress.objects.filter(
+                user=user, 
+                lesson=obj, 
+                is_completed=True
+            ).exists()
+        return False
+
+class LessonProgressSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the LessonProgress model.
+    
+    Used primarily for updating and retrieving the completion status 
+    of a specific lesson for the authenticated user.
+    """
+    class Meta:
+        model = LessonProgress
+        fields = ['id', 'user', 'lesson', 'is_completed', 'completed_at']
+        read_only_fields = ['id', 'user', 'completed_at']
+
+    def validate(self, data):
+        """
+        Ensure that we don't create duplicate progress records.
+        The 'unique_together' constraint in the model handles this at the DB level,
+        but this provides a cleaner validation error in the API.
+        """
+        user = self.context['request'].user
+        lesson = data.get('lesson')
+        
+        if LessonProgress.objects.filter(user=user, lesson=lesson).exists():
+            raise serializers.ValidationError("Progress for this lesson already exists.")
+        return data
+    
 class TopicSerializer(serializers.ModelSerializer):
     """Groups lessons into modular topics."""
     lessons = LessonSerializer(many=True, read_only=True)
@@ -102,19 +148,60 @@ class TopicSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'lessons', 'order']
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    """Full-depth course data including all nested curriculum structures."""
+    """
+    Comprehensive serializer for the Course Curriculum view.
+    
+    Provides nested topics/lessons, a flat list of completed lesson IDs 
+    for the sidebar, and an overall progress percentage for the UI progress bar.
+    """
     topics = TopicSerializer(many=True, read_only=True)
+    completed_lesson_ids = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'code', 'description', 'topics']
-        
-    def update(self, instance, validated_data):
-        """Synchronizes course attributes and handles atomic updates for topics."""
-        instance.title = validated_data.get('title', instance.title)
-        instance.save()
-        return instance 
+        fields = [
+            'id', 'title', 'description', 'thumbnail', 
+            'topics', 'completed_lesson_ids', 'progress_percentage'
+        ]
 
+    def get_completed_lesson_ids(self, obj) -> list:
+        """
+        Retrieves a list of IDs for all lessons the user has completed in this course.
+        
+        Returns:
+            list: IDs of completed lessons, e.g., [12, 15, 20].
+        """
+        user = self.context.get('request').user
+        if user and user.is_authenticated:
+            return LessonProgress.objects.filter(
+                user=user, 
+                lesson__topic__course=obj, 
+                is_completed=True
+            ).values_list('lesson_id', flat=True)
+        return []
+
+    def get_progress_percentage(self, obj) -> int:
+        """
+        Calculates the user's completion progress as an integer percentage.
+        
+        Returns:
+            int: The percentage of course lessons completed (0-100).
+        """
+        user = self.context.get('request').user
+        if user and user.is_authenticated:
+            total_lessons = Lesson.objects.filter(topic__course=obj).count()
+            if total_lessons == 0:
+                return 0
+            
+            completed_count = LessonProgress.objects.filter(
+                user=user, 
+                lesson__topic__course=obj, 
+                is_completed=True
+            ).count()
+            
+            return round((completed_count / total_lessons) * 100)
+        return 0
 class EnrollmentSerializer(serializers.ModelSerializer):
     """Tracks student progress and calculates cumulative performance metrics."""
     student_name = serializers.ReadOnlyField(source='student.username')
@@ -153,7 +240,6 @@ class CourseCreateSerializer(serializers.ModelSerializer):
         if not (request and request.user):
             raise serializers.ValidationError("Valid user context required for course creation.")
 
-        # Handle stringified JSON from FormData (standard React/Web behavior)
         topics_raw = request.data.get('topics')
         try:
             topics_data = json.loads(topics_raw) if isinstance(topics_raw, str) else (topics_raw or [])
@@ -175,3 +261,55 @@ class CourseCreateSerializer(serializers.ModelSerializer):
                 Lesson.objects.create(topic=topic, **lesson_item)
                 
         return course
+
+class StaffOnboardingSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=['TEACHER', 'ADMIN'])
+    full_name = serializers.CharField(write_only=False) 
+
+    class Meta:
+        model = User
+        fields = ['email', 'full_name', 'role']
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')
+        full_name = validated_data.pop('full_name')
+
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['email'].split('@')[0],
+            password=get_random_string(12),
+            is_staff=True 
+        )
+
+        if role == 'ADMIN':
+            user.is_superuser = True 
+        
+        user.save()
+        return user  
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    course_count = serializers.SerializerMethodField()
+    enrollment_count = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        super(AdminUserSerializer, self).__init__(*args, **kwargs)
+        if 'password' in self.fields:
+            self.fields.pop('password')
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'role', 'first_name', 
+            'last_name', 'date_joined', 'last_login', 
+            'course_count', 'enrollment_count', 'is_active'
+        ]
+
+    def get_course_count(self, obj):
+        if obj.role == 'TEACHER':
+            return obj.authored_courses.count()
+        return 0
+
+    def get_enrollment_count(self, obj):
+        if obj.role == 'STUDENT':
+            return obj.enrolled_courses.count()
+        return 0      

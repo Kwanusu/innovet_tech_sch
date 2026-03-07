@@ -1,18 +1,72 @@
 from django.db.models import Q, Count
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-
-from .models import Task, Course, TaskSubmission, CalendarEvent, Enrollment
+from rest_framework.exceptions import PermissionDenied 
+from rest_framework.permissions import IsAuthenticated, IsAdminUser      
+import json
+from django.db import transaction
+from .models import Task, Course, TaskSubmission, CalendarEvent, Enrollment, Topic, Lesson
 from .serializers import (
     CourseDetailSerializer, TaskSerializer, EnrollmentSerializer, 
     CourseSerializer, CourseCreateSerializer, CalendarEventSerializer, 
-    TaskSubmissionSerializer
+    TaskSubmissionSerializer, LessonProgress, LessonSerializer
 )
+from datetime import timedelta
+from django.utils import timezone
+from rest_framework.views import APIView
+
 
 User = get_user_model()
+
+class AdminDashboardViewSet(viewsets.ViewSet):
+    """
+    ViewSet for the High-Level Admin Command Center.
+    Provides system-wide metrics and user management.
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    @action(detail=False, methods=['get'], url_path='dashboard-stats')
+    def get_stats(self, request):
+        """GET /api/admin/stats/"""
+        now = timezone.now()
+        last_30_days = now - timedelta(days=30)
+
+        stats = {
+            "metrics": {
+                "total_students": User.objects.filter(role='STUDENT').count(),
+                "total_teachers": User.objects.filter(role='TEACHER').count(),
+                "active_courses": Course.objects.filter(is_published=True).count(),
+                "total_revenue": Enrollment.objects.aggregate(total=Count('id'))['total'] or 0, # Adjust for your pricing logic
+            },
+            "growth": {
+                "new_enrollments": Enrollment.objects.filter(enrolled_at__gte=last_30_days).count(),
+                "completion_rate": 85, 
+            }
+        }
+        return Response(stats)
+
+    @action(detail=False, methods=['get'], url_path='users')
+    def list_users(self, request):
+        """GET /api/admin/users/?role=TEACHER"""
+        role = request.query_params.get('role', 'ALL')
+        
+        users = User.objects.all()
+        if role != 'ALL':
+            users = users.filter(role=role)
+
+        user_data = users.values('id', 'username', 'email', 'role', 'date_joined')
+        return Response(user_data)
+
+    @action(detail=False, methods=['get'], url_path='logs')
+    def system_logs(self, request):
+        """GET /api/admin/logs/"""
+        logs = [
+            {"id": 1, "action": "Course Created", "user": "Admin", "time": "2 mins ago"},
+            {"id": 2, "action": "New Enrollment", "user": "Student_01", "time": "15 mins ago"},
+        ]
+        return Response(logs)
 
 class CourseViewSet(viewsets.ModelViewSet):
     """
@@ -69,6 +123,69 @@ class CourseViewSet(viewsets.ModelViewSet):
         if self.request.user.role != 'TEACHER' and not self.request.user.is_staff:
             raise PermissionDenied("Only teachers can create courses.")
         serializer.save(teacher=self.request.user)
+
+
+    @action(detail=True, methods=['patch', 'put'], url_path='update')
+    def update_course(self, request, pk=None):
+        try:
+            course = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=404)
+
+        with transaction.atomic():
+
+            course.title = request.data.get('title', course.title)
+            course.code = request.data.get('code', course.code)
+            course.description = request.data.get('description', course.description)
+            course.price = request.data.get('price', course.price)
+            course.is_published = request.data.get('is_published') == 'true'
+            
+            if 'thumbnail' in request.FILES:
+                course.thumbnail = request.FILES['thumbnail']
+            
+            course.save()
+
+            topics_json = request.data.get('topics')
+            if topics_json:
+                topics_data = json.loads(topics_json)
+       
+                keep_topic_ids = []
+                
+                for t_data in topics_data:
+                    topic_id = t_data.get('id')
+               
+                    topic, created = Topic.objects.update_or_create(
+                        id=topic_id if isinstance(topic_id, int) else None,
+                        course=course,
+                        defaults={
+                            'title': t_data['title'],
+                            'order': t_data['order']
+                        }
+                    )
+                    keep_topic_ids.append(topic.id)
+               
+                    keep_lesson_ids = []
+                    for l_data in t_data.get('lessons', []):
+                        lesson_id = l_data.get('id')
+                        
+                        lesson, l_created = Lesson.objects.update_or_create(
+                            id=lesson_id if isinstance(lesson_id, int) else None,
+                            topic=topic,
+                            defaults={
+                                'title': l_data['title'],
+                                'content': l_data['content'],
+                                'lesson_type': l_data.get('lesson_type', 'LESSON'),
+                                'order': l_data['order']
+                            }
+                        )
+                        keep_lesson_ids.append(lesson.id)
+                   
+                    topic.lessons.exclude(id__in=keep_lesson_ids).delete()
+
+                course.topics.exclude(id__in=keep_topic_ids).delete()
+
+        serializer = CourseSerializer(course)
+        return Response(serializer.data)    
 
     @action(detail=False, methods=['get'], url_path='my-courses')
     def my_courses(self, request):
@@ -249,3 +366,73 @@ def enroll_student(request, course_id):
         return Response({"message": "No student found with this email"}, status=404)
     except Course.DoesNotExist:
         return Response({"message": "Course not found"}, status=404)
+
+class LessonViewSet(viewsets.ModelViewSet):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['post'], url_path='complete')
+    def mark_complete(self, request, pk=None):
+        """
+        Custom action to mark a lesson as completed for the current user.
+        URL: /api/lessons/{id}/complete/
+        """
+        lesson = self.get_object()
+        user = request.user
+
+        progress, created = LessonProgress.objects.update_or_create(
+            user=user,
+            lesson=lesson,
+            defaults={'is_completed': True}
+        )
+
+        course = lesson.topic.course
+        total_lessons = Lesson.objects.filter(topic__course=course).count()
+        completed_lessons = LessonProgress.objects.filter(
+            user=user, 
+            lesson__topic__course=course, 
+            is_completed=True
+        ).count()
+        
+        overall_percent = round((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+
+        return Response({
+            'status': 'success',
+            'lessonId': lesson.id,
+            'progress': {
+                'completed_count': completed_lessons,
+                'total_count': total_lessons,
+                'overall_percent': overall_percent
+            }
+        }, status=status.HTTP_200_OK)    
+        
+        
+class StaffManagementViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
+    
+    def get_queryset(self):
+        return User.objects.filter(role__in=['TEACHER', 'ADMIN']).annotate(
+            courses_led=Count('authored_courses'), # Assuming a related_name in Course model
+            active_students=Count('authored_courses__enrollments', distinct=True)
+        ) 
+
+class InviteStaffView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request):
+        requested_role = request.data.get('role')
+        if requested_role == 'ADMIN' and not request.user.is_superuser:
+            return Response(
+                {"detail": "Unauthorized. Only Superusers can promote others to Admin."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = StaffOnboardingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": f"Successfully onboarded {requested_role}"}, 
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)               
