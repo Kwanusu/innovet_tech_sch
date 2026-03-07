@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://innovet-tech-sch.onrender.com';
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return 'https://innovet-tech-sch.onrender.com';
+  }
+  return import.meta.env.VITE_API_URL || 'http://localhost:8000';
+};
+
+const BASE_URL = getBaseUrl();
 
 const API = axios.create({
   baseURL: BASE_URL,
