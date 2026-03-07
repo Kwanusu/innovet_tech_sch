@@ -1,5 +1,3 @@
-Understood. I have integrated the full repository cloning process and the detailed project directory structure into the documentation. Nothing has been truncated.
-
 # Innovet Tech: Enterprise LMS
 
 ## Project Overview
