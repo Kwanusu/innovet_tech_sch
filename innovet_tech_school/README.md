@@ -1,5 +1,3 @@
-Understood. I have integrated the full repository cloning process and the detailed project directory structure into the documentation. Nothing has been truncated.
-
 # Innovet Tech: Enterprise LMS
 
 ## Project Overview
@@ -8,7 +6,7 @@ Understood. I have integrated the full repository cloning process and the detail
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 This project follows a decoupled monolithic architecture, separating the Django REST API from the React frontend for independent scalability.
 
