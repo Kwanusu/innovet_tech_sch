@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { createCourse, updateCourse } from '../../school/schoolSlice'; // Ensure updateCourse is imported
+import { createCourse, updateCourse } from '../../school/schoolSlice'; 
 import { 
     Plus, Trash2, Book, X, 
     Loader2, UploadCloud, ImageIcon, 
@@ -36,18 +36,21 @@ const CourseCreateForm = ({ onSuccess, initialData, isEditMode }) => {
         ]
     });
 
-    // --- EFFECT: Populate Form for Editing ---
     useEffect(() => {
         if (isEditMode && initialData) {
             setCourseData({
                 ...initialData,
-                // Ensure thumbnail is handled as null initially unless changed
                 thumbnail: null, 
-                // Ensure topics and lessons have IDs for the frontend loop
                 topics: initialData.topics?.length > 0 ? initialData.topics : courseData.topics
             });
-            if (initialData.thumbnail) {
-                setPreview(initialData.thumbnail.startsWith('http') ? initialData.thumbnail : `http://localhost:8000${initialData.thumbnail}`);
+           if (initialData.thumbnail) {
+                const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://innovet-tech-sch.onrender.com';
+                
+                setPreview(
+                    initialData.thumbnail.startsWith('http') 
+                    ? initialData.thumbnail 
+                    : `${BACKEND_URL}${initialData.thumbnail}`
+                );
             }
         }
     }, [initialData, isEditMode]);

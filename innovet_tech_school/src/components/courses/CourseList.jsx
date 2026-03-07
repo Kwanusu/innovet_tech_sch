@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, BookOpen, Clock, ChevronRight, Filter, GraduationCap, LayoutGrid } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const CourseList = ({ courses = [], onSelectCourse }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const BACKEND_URL = "http://localhost:8000";
+  const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://innovet-tech-sch.onrender.com';
 
   const filteredCourses = useMemo(() => {
     return (courses || [])
@@ -16,7 +16,7 @@ const CourseList = ({ courses = [], onSelectCourse }) => {
         course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         course.code?.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      .sort((a, b) => (b.progress || 0) - (a.progress || 0)); // Sort by most progress first
+      .sort((a, b) => (b.progress || 0) - (a.progress || 0)); 
   }, [courses, searchTerm]);
 
   const getProgressColor = (progress) => {

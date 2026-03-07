@@ -11,6 +11,7 @@ import {
 import GradingModal from './GradingModal';
 import EnrollmentModal from '../teacher/EnrolmentModal'; 
 import CourseCreateForm from '../../components/courses/CourseCreationForm'; 
+import API from '../../api/axiosConfig'
 
 // --- Shadcn UI ---
 import { 
@@ -260,7 +261,7 @@ const TeacherDashboard = () => {
 /* --- SUB-COMPONENTS --- */
 
 const CourseCard = ({ course, onDelete, onEnroll, onEdit, onTogglePublish }) => {
-  const BACKEND_URL = "http://localhost:8000";
+  const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://innovet-tech-sch.onrender.com';
   const thumbnailUrl = course.thumbnail 
     ? (course.thumbnail.startsWith('http') ? course.thumbnail : `${BACKEND_URL}${course.thumbnail}`)
     : null;

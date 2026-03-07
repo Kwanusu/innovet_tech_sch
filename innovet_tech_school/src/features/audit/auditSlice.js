@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import API from '../../api/axiosConfig'
 
 export const fetchAuditLogs = createAsyncThunk(
   'audit/fetchLogs',
   async (_, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.get('http://localhost:8000/api/logs/', {
+      const response = await API.get('/api/logs/', {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
