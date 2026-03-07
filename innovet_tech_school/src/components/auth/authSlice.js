@@ -1,18 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import API from '../../api/axiosConfig.js';
 
-// --- Thunks ---
-
-/**
- * Load User: Fetches the profile for the current token.
- * This should be dispatched in your App.js useEffect if a token exists.
- */
 export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWithValue }) => {
     try {
         const response = await API.get('/api/auth/me/');    
         return response.data; 
     } catch (err) {
-        // If the token is invalid or expired, clear it
         if (err.response?.status === 401 || err.response?.status === 403) {
             localStorage.removeItem('token');
         }
@@ -20,18 +13,14 @@ export const loadUser = createAsyncThunk('auth/loadUser', async (_, { rejectWith
     }
 });
 
-/**
- * Login: Authenticates and stores the access token.
- */
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
     try {
         const response = await API.post('/api/auth/login/', credentials);
-        
-        // Ensure the token is stored immediately upon successful login
+
         if (response.data.access) {
             localStorage.setItem('token', response.data.access);
         } else if (response.data.token) {
-            // Handle cases where the key might be 'token' instead of 'access'
+'
             localStorage.setItem('token', response.data.token);
         }
 
@@ -41,9 +30,6 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
     }
 });
 
-/**
- * Register: Creates a new account.
- */
 export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
     try {
         const response = await API.post('/api/auth/register/', userData);
@@ -52,8 +38,6 @@ export const register = createAsyncThunk('auth/register', async (userData, { rej
         return rejectWithValue(err.response?.data || 'Registration failed');
     }
 });
-
-// --- Slice ---
 
 const authSlice = createSlice({
     name: 'auth',
@@ -79,7 +63,6 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Login Logic
             .addCase(login.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
