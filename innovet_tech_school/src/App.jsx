@@ -8,6 +8,7 @@ import Navbar from './components/layouts/Navbar';
 import LessonDetailPage from './pages/LessonDetail';
 import Register from './pages/Register';
 import CourseCurriculum from './components/student/CourseCurriculum';
+import StudentGrades from './components/student/StudentGrade';
 
 function App() {
   return (
@@ -42,6 +43,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
                   <LessonDetailPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/dashboard/grades" 
+              element={
+                <ProtectedRoute allowedRoles={['STUDENT']}>
+                  <StudentGrades />
                 </ProtectedRoute>
               } 
             />
