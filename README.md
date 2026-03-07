@@ -6,7 +6,7 @@
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 This project follows a decoupled monolithic architecture, separating the Django REST API from the React frontend for independent scalability.
 
