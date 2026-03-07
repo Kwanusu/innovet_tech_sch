@@ -20,7 +20,6 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
         if (response.data.access) {
             localStorage.setItem('token', response.data.access);
         } else if (response.data.token) {
-'
             localStorage.setItem('token', response.data.token);
         }
 
