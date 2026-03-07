@@ -38,8 +38,6 @@ class AuditLog(models.Model):
     message = models.TextField(help_text="Detailed description of the event.")
     timestamp = models.DateTimeField(auto_now_add=True)
     
-    # Relational link: One User has many Logs. 
-    # SET_NULL ensures logs remain for forensic history even if a user account is removed.
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         related_name='logs', 
@@ -48,7 +46,7 @@ class AuditLog(models.Model):
     )
 
     class Meta:
-        ordering = ['-timestamp'] # Latest logs first    
+        ordering = ['-timestamp']    
         verbose_name = "Audit Log"
         verbose_name_plural = "Audit Logs"
 
