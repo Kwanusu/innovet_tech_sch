@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://innovet-tech-sch.onrender.com';
+
 const API = axios.create({
-  baseURL: 'http://localhost:8000/',
+  baseURL: BASE_URL,
 });
 
 API.interceptors.request.use((config) => {
@@ -14,7 +16,6 @@ API.interceptors.request.use((config) => {
 
 API.interceptors.response.use(
   (response) => response,
-
   async (error) => {
     const originalRequest = error.config;
 
@@ -24,23 +25,22 @@ API.interceptors.response.use(
 
       if (refreshToken) {
         try {
-            const response = await axios.post(`http://localhost:8000/api/token/refresh/`, {
-                refresh: refreshToken
-            });
 
-            
-            if (response.status === 200) {
-                const newAccessToken = response.data.access;
-                localStorage.setItem('token', newAccessToken);
+          const response = await axios.post(`${BASE_URL}/api/token/refresh/`, {
+            refresh: refreshToken
+          });
 
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-                return API(originalRequest);
-            }
+          if (response.status === 200) {
+            const newAccessToken = response.data.access;
+            localStorage.setItem('token', newAccessToken);
+
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return API(originalRequest);
+          }
         } catch (refreshError) {
-            console.error('Refresh token expired',refreshError)
+          console.error('Refresh token expired', refreshError);
         }
       }
-            
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
