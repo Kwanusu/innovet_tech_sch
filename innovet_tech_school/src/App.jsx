@@ -6,6 +6,8 @@ import StudentDashboard from './components/student/StudentDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Navbar from './components/layouts/Navbar';
 import LessonDetailPage from './pages/LessonDetail';
+import Register from './pages/Register';
+import CourseCurriculum from './components/student/CourseCurriculum';
 
 function App() {
   return (
@@ -16,12 +18,21 @@ function App() {
         <div className="flex-1">
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
             <Route 
               path="/my-learning" 
               element={
                 <ProtectedRoute allowedRoles={['STUDENT']}>
                   <StudentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/courses/:courseId/learn" 
+              element={
+                <ProtectedRoute allowedRoles={['STUDENT']}>
+                  <CourseCurriculum />
                 </ProtectedRoute>
               } 
             />

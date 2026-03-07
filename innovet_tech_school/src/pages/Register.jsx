@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { register, clearAuthError } from '../features/auth/authSlice'; 
+import { register, clearAuthError } from '../components/auth/authSlice'; 
 
 const Register = () => {
   const [formData, setFormData] = useState({

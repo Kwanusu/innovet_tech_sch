@@ -142,7 +142,7 @@ const StudentDashboard = () => {
                   </CardDescription>
                   <Button 
                     className="mt-auto w-full rounded-xl font-black h-12 bg-slate-50 text-slate-900 hover:bg-primary hover:text-white transition-all shadow-none group-hover:shadow-lg group-hover:shadow-primary/20" 
-                    onClick={() => navigate(`/courses/${course.id}`)}
+                    onClick={() => navigate(`/courses/${course.id}/learn`)}
                   >
                     Continue Learning <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>

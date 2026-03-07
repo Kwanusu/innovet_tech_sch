@@ -16,6 +16,25 @@ export const fetchCourses = createAsyncThunk('school/fetchCourses', async (_, { 
     }
 });
 
+export const fetchCourseById = createAsyncThunk(
+  "school/fetchCourseById",
+  async (courseId, { rejectWithValue }) => {
+    try {
+      const response = await API.get(`/courses/${courseId}/`);
+      
+      return response.data;
+    } catch (err) {
+      
+      const message = 
+        err.response?.data?.detail || 
+        err.response?.data?.message || 
+        "Failed to load course details";
+        
+      return rejectWithValue(message);
+    }
+  }
+);
+
 export const createCourse = createAsyncThunk('school/createCourse', async (formData, { rejectWithValue }) => {
     try {
         const response = await API.post('/api/courses/', formData);
@@ -92,7 +111,7 @@ export const markLessonComplete = createAsyncThunk(
   async ({ courseId, lessonId }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/api/courses/${courseId}/lessons/${lessonId}/complete/`);
-      return { lessonId, progress: response.data }; // Returning lessonId to update local array
+      return { lessonId, progress: response.data }; 
     } catch (err) {
       return rejectWithValue(err.response?.data);
     }
@@ -128,6 +147,20 @@ const schoolSlice = createSlice({
                 state.error = action.payload;
             })
 
+            .addCase(fetchCourseById.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(fetchCourseById.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.currentCourse = action.payload;
+            })
+            .addCase(fetchCourseById.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+                state.currentCourse = null;
+            })
+
             .addCase(fetchCourseDetail.fulfilled, (state, action) => {
                 state.currentCourse = action.payload;
             })
@@ -154,7 +187,7 @@ const schoolSlice = createSlice({
                 
                 if (state.currentCourse && state.currentCourse.id === action.payload.courseId) {
 
-                // state.currentCourse.enrolled_count += 1;
+                state.currentCourse.enrolled_count += 1;
                 }
             })
             .addCase(enrollStudent.rejected, (state, action) => {
@@ -171,10 +204,16 @@ const schoolSlice = createSlice({
             })
 
             .addCase(markLessonComplete.fulfilled, (state, action) => {
-                if (!state.completedLessons.includes(action.payload.lessonId)) {
-                    state.completedLessons.push(action.payload.lessonId);
-                }
-            })
+            const { lessonId } = action.payload;
+            
+            if (!state.completedLessons.includes(lessonId)) {
+                state.completedLessons.push(lessonId);
+            }
+            
+            if (action.payload.progress?.overall_percent) {
+                state.currentCourseProgress = action.payload.progress.overall_percent;
+            }
+            });
     }
 });
 
