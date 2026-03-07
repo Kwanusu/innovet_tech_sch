@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { 
   CheckCircle2, 
   PlayCircle, 
   ChevronRight, 
   Trophy, 
   Layout, 
-  ArrowLeft 
+  ArrowLeft,
+  ShieldCheck 
 } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,6 +25,8 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
   const navigate = useNavigate();
   const { courseId, lessonId } = useParams();
 
+  const { user } = useSelector((state) => state.auth);
+
   const stats = useMemo(() => {
     const allLessons = course.topics?.flatMap(t => t.lessons) || [];
     const total = allLessons.length;
@@ -34,14 +38,25 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
 
   return (
     <aside className="w-80 border-r bg-white flex flex-col h-[calc(100vh-65px)] sticky top-[65px] z-30 shadow-sm">
-
+ 
       <div className="p-6 border-b space-y-4 bg-slate-50/50">
-        <Link 
-          to="/my-learning" 
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
-        >
-          <ArrowLeft size={12} /> Back to My Courses
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link 
+            to="/my-learning" 
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+          >
+            <ArrowLeft size={12} /> Back to My Courses
+          </Link>
+
+          {user?.is_staff && (
+            <Link 
+              to="/admin/dashboard" 
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100"
+            >
+              <ShieldCheck size={12} /> Admin
+            </Link>
+          )}
+        </div>
         
         <div>
           <h2 className="font-black text-slate-900 leading-tight line-clamp-2 text-lg">
@@ -49,7 +64,7 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
           </h2>
           <div className="flex items-center gap-2 mt-2">
             <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none text-[9px] font-black px-2 py-0.5 rounded-md">
-              STUDENT VIEW
+              {user?.is_staff ? 'INSTRUCTOR VIEW' : 'STUDENT VIEW'}
             </Badge>
           </div>
         </div>
@@ -103,7 +118,6 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
                           : 'hover:bg-slate-50 text-slate-600'
                       }`}
                     >
-
                       <div className="shrink-0">
                         {isDone ? (
                           <div className={`p-1 rounded-full ${isCurrent ? 'bg-emerald-400' : 'bg-emerald-100'}`}>
@@ -111,7 +125,7 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
                           </div>
                         ) : (
                           <PlayCircle className={`h-5 w-5 transition-colors ${
-                            isCurrent ? 'text-primary-foreground' : 'text-slate-300 group-hover:text-primary'
+                            isCurrent ? 'text-white' : 'text-slate-300 group-hover:text-primary'
                           }`} />
                         )}
                       </div>
@@ -150,14 +164,13 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
                   You've completed every lesson in this path.
                 </p>
               </div>
-              <Button size="sm" className="w-full rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700">
+              <button className="w-full py-2.5 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-md shadow-emerald-200">
                 Claim Certificate
-              </Button>
+              </button>
             </div>
           )}
         </div>
       </ScrollArea>
-
       <div className="p-4 border-t bg-slate-50/50 flex items-center justify-between">
         <TooltipProvider>
           <Tooltip>
@@ -179,14 +192,5 @@ const LessonSidebar = ({ course, completedLessons = [] }) => {
     </aside>
   );
 };
-
-const Button = ({ children, className, size, ...props }) => (
-  <button 
-    className={`inline-flex items-center justify-center text-sm transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 text-white ${className}`}
-    {...props}
-  >
-    {children}
-  </button>
-);
 
 export default LessonSidebar;

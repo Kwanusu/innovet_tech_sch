@@ -20,7 +20,7 @@ export const fetchCourseById = createAsyncThunk(
   "school/fetchCourseById",
   async (courseId, { rejectWithValue }) => {
     try {
-      const response = await API.get(`/courses/${courseId}/`);
+      const response = await API.get(`/api/courses/${courseId}/`);
       
       return response.data;
     } catch (err) {
@@ -55,16 +55,24 @@ export const fetchCourseDetail = createAsyncThunk('school/fetchCourseDetail', as
 
 export const deleteCourse = createAsyncThunk('school/deleteCourse', async (courseId, { rejectWithValue }) => {
     try {
-        await API.delete(`/api/courses/${courseId}/`); // Fixed: Used API instead of axios
+        await API.delete(`/api/courses/${courseId}/`); 
         return courseId;
     } catch (err) {
         return handleAsyncError(err, rejectWithValue);
     }
 });
 
-export const updateCourse = createAsyncThunk('school/updateCourse', async ({ id, data }, { rejectWithValue }) => {
+export const updateCourse = createAsyncThunk('school/updateCourse', async ({ id, data }, { getState,  rejectWithValue }) => {
     try {
-        const response = await API.patch(`/api/courses/${id}/`, data);
+
+        const token = getState().auth.token
+        const response = await API.patch(`/api/courses/${id}/update/`, data, {
+            headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        });
+        
         return response.data;
     } catch (error) {
         return handleAsyncError(error, rejectWithValue);
@@ -76,7 +84,7 @@ export const enrollStudent = createAsyncThunk(
   async ({ courseId, email }, { rejectWithValue }) => {
     try {
     
-      const response = await API.post(`/courses/${courseId}/enroll/`, { email });
+      const response = await API.post(`/api/courses/${courseId}/enroll/`, { email });
       
       
       return { courseId, student: response.data }; 
@@ -108,9 +116,9 @@ export const gradeSubmission = createAsyncThunk('school/gradeSubmission', async 
 
 export const markLessonComplete = createAsyncThunk(
   'school/markLessonComplete',
-  async ({ courseId, lessonId }, { rejectWithValue }) => {
+  async ({ lessonId }, { rejectWithValue }) => {
     try {
-      const response = await API.post(`/api/courses/${courseId}/lessons/${lessonId}/complete/`);
+      const response = await API.post(`/api/lessons/${lessonId}/complete/`);
       return { lessonId, progress: response.data }; 
     } catch (err) {
       return rejectWithValue(err.response?.data);
@@ -140,7 +148,7 @@ const schoolSlice = createSlice({
             .addCase(fetchCourses.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 state.courses = action.payload;
-                state.instructorCourses = action.payload; // Syncing both for now
+                state.instructorCourses = action.payload; 
             })
             .addCase(fetchCourses.rejected, (state, action) => {
                 state.status = 'failed';
@@ -152,8 +160,9 @@ const schoolSlice = createSlice({
                 state.error = null;
             })
             .addCase(fetchCourseById.fulfilled, (state, action) => {
-                state.status = 'succeeded';
                 state.currentCourse = action.payload;
+                state.completedLessons = action.payload.completed_lesson_ids || [];
+                state.status = 'succeeded';
             })
             .addCase(fetchCourseById.rejected, (state, action) => {
                 state.status = 'failed';

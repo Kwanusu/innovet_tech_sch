@@ -30,7 +30,7 @@ import {
   BookOpen, Users, Plus, ArrowLeft, MoreVertical, 
   Trash2, Edit3, UserPlus, Send, Archive, 
   LayoutDashboard, ClipboardCheck, GraduationCap, 
-  Search, CheckCircle2, Dot
+  Search, Dot, Settings2
 } from "lucide-react";
 import { toast } from 'sonner';
 
@@ -107,16 +107,28 @@ const TeacherDashboard = () => {
   // --- Sub-View: Create/Edit ---
   if (view === 'create' || view === 'edit') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl animate-in fade-in slide-in-from-bottom-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => { setView('dashboard'); setEditingCourse(null); }} 
-          className="mb-8 rounded-xl font-bold"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-        </Button>
+      <div className="container mx-auto p-6 max-w-5xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="flex items-center justify-between mb-10">
+            <Button 
+                variant="outline" 
+                onClick={() => { setView('dashboard'); setEditingCourse(null); }} 
+                className="rounded-xl font-bold border-2"
+            >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Exit Editor
+            </Button>
+            <div className="text-right">
+                <Badge variant="secondary" className="mb-1 uppercase tracking-widest text-[10px] font-black">
+                    {view === 'edit' ? "Editor Mode" : "Creator Mode"}
+                </Badge>
+                <h2 className="text-2xl font-black text-slate-900 italic">
+                    {view === 'edit' ? editingCourse?.title : "New Curriculum"}
+                </h2>
+            </div>
+        </div>
+
         <CourseCreateForm 
           initialData={editingCourse} 
+          isEditMode={view === 'edit'}
           onSuccess={() => { 
             setView('dashboard'); 
             setEditingCourse(null); 
@@ -130,15 +142,16 @@ const TeacherDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50/50 p-6 lg:p-10 space-y-10 selection:bg-primary/10">
       
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
             Instructor Hub <GraduationCap className="text-primary h-9 w-9" />
           </h1>
           <div className="flex items-center gap-2 mt-2 text-slate-500 font-bold">
-            <span>Welcome, {user?.username}</span>
+            <span>Logged in as {user?.username}</span>
             <Dot className="h-4 w-4 text-slate-300" />
-            <span className="text-primary">{instructorCourses.length} Courses Total</span>
+            <span className="text-primary">{instructorCourses.length} Courses</span>
           </div>
         </div>
         <Button 
@@ -152,7 +165,7 @@ const TeacherDashboard = () => {
       <Tabs defaultValue="overview" className="space-y-10">
         <TabsList className="bg-white/70 backdrop-blur-sm border p-1.5 rounded-2xl shadow-sm h-16 w-fit inline-flex">
           <TabsTrigger value="overview" className="rounded-xl px-8 h-full data-[state=active]:shadow-md font-bold">
-            <LayoutDashboard className="h-4 w-4 mr-2" /> Overview
+            <LayoutDashboard className="h-4 w-4 mr-2" /> My Courses
           </TabsTrigger>
           <TabsTrigger value="grading" className="rounded-xl px-8 h-full data-[state=active]:shadow-md font-bold">
             <ClipboardCheck className="h-4 w-4 mr-2" /> 
@@ -164,11 +177,12 @@ const TeacherDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex flex-col md:flex-row gap-4 p-4 bg-white border rounded-3xl shadow-sm shadow-slate-200/50">
+          {/* Filters Bar */}
+          <div className="flex flex-col md:flex-row gap-4 p-4 bg-white border rounded-3xl shadow-sm">
             <div className="relative flex-1 group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
               <Input 
-                placeholder="Search by course title or code..." 
+                placeholder="Find a course..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-14 bg-slate-50/50 border-none rounded-2xl focus-visible:ring-4 focus-visible:ring-primary/10 transition-all font-medium text-lg"
@@ -188,6 +202,7 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
+          {/* Course Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredCourses.length > 0 ? (
               filteredCourses.map(course => (
@@ -203,8 +218,8 @@ const TeacherDashboard = () => {
             ) : (
               <EmptyState 
                 icon={<BookOpen />} 
-                title={searchQuery ? "No matches found" : "No courses yet"} 
-                description={searchQuery ? "Try refining your search terms." : "Start your teaching journey today."}
+                title={searchQuery ? "No matches found" : "Your classroom is empty"} 
+                description={searchQuery ? "Try a different search term or filter." : "Create your first course to start teaching."}
                 action={searchQuery ? () => setSearchQuery('') : () => setView('create')}
               />
             )}
@@ -212,7 +227,7 @@ const TeacherDashboard = () => {
         </TabsContent>
 
         <TabsContent value="grading" className="animate-in fade-in zoom-in-95 duration-300">
-          <Card className="border-none shadow-2xl shadow-slate-200/60 rounded-[2rem] overflow-hidden bg-white">
+          <Card className="border-none shadow-2xl shadow-slate-200/60 rounded-[2.5rem] overflow-hidden bg-white">
             <CardContent className="p-0">
               <SubmissionTable 
                 data={submissions} 
@@ -223,6 +238,7 @@ const TeacherDashboard = () => {
         </TabsContent>
       </Tabs>
       
+      {/* Modals */}
       {selectedSub && (
         <GradingModal 
           isOpen={isGrading} 
@@ -241,6 +257,8 @@ const TeacherDashboard = () => {
   );
 };
 
+/* --- SUB-COMPONENTS --- */
+
 const CourseCard = ({ course, onDelete, onEnroll, onEdit, onTogglePublish }) => {
   const BACKEND_URL = "http://localhost:8000";
   const thumbnailUrl = course.thumbnail 
@@ -248,22 +266,18 @@ const CourseCard = ({ course, onDelete, onEnroll, onEdit, onTogglePublish }) => 
     : null;
 
   return (
-    <Card className="overflow-hidden group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 border-none shadow-xl shadow-slate-200/50 flex flex-col h-full bg-white rounded-[2rem]">
+    <Card className="overflow-hidden group hover:shadow-2xl transition-all duration-500 border-none shadow-xl shadow-slate-200/50 flex flex-col h-full bg-white rounded-[2.5rem]">
       <div className="relative h-56 w-full bg-slate-100 overflow-hidden">
         {thumbnailUrl ? (
-          <img 
-            src={thumbnailUrl} 
-            alt={course.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-          />
+          <img src={thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50">
             <BookOpen size={64} />
           </div>
         )}
-        <div className="absolute top-5 right-5">
-          <Badge className={`rounded-xl px-4 py-1.5 font-black tracking-widest text-[10px] shadow-lg ${course.is_published ? "bg-emerald-500" : "bg-slate-500"}`}>
-            {course.is_published ? "LIVE" : "DRAFT"}
+        <div className="absolute top-5 left-5">
+           <Badge className={`rounded-full px-4 py-1.5 font-black text-[9px] shadow-lg border-none ${course.is_published ? "bg-emerald-500 text-white" : "bg-white text-slate-900"}`}>
+            {course.is_published ? "● LIVE" : "○ DRAFT"}
           </Badge>
         </div>
       </div>
@@ -271,20 +285,20 @@ const CourseCard = ({ course, onDelete, onEnroll, onEdit, onTogglePublish }) => 
       <CardHeader className="p-8 pb-4 flex-1">
         <div className="flex justify-between items-start">
           <span className="text-[11px] font-black tracking-[0.2em] text-primary uppercase opacity-60">
-            {course.code || "LMS-CORE"}
+            {course.code || "LMS-UNIT"}
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="rounded-full h-10 w-10 hover:bg-slate-100">
+              <Button variant="ghost" size="sm" className="rounded-full h-10 w-10">
                 <MoreVertical className="h-5 w-5 text-slate-400" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2 shadow-xl border-slate-100">
+            <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2 shadow-xl">
               <DropdownMenuItem onClick={onEnroll} className="rounded-xl p-3 font-bold cursor-pointer">
                 <UserPlus size={18} className="mr-3 text-primary" /> Enroll Student
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(course)} className="rounded-xl p-3 font-bold cursor-pointer">
-                <Edit3 size={18} className="mr-3 text-slate-500" /> Course Settings
+                <Settings2 size={18} className="mr-3 text-slate-500" /> Course Settings
               </DropdownMenuItem>
               <div className="h-px bg-slate-100 my-2" />
               <DropdownMenuItem className="text-red-600 rounded-xl p-3 font-bold cursor-pointer" onClick={onDelete}>
@@ -293,32 +307,34 @@ const CourseCard = ({ course, onDelete, onEnroll, onEdit, onTogglePublish }) => 
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <CardTitle className="text-2xl font-black text-slate-900 line-clamp-1 mt-3 tracking-tight group-hover:text-primary transition-colors">
+        <CardTitle className="text-2xl font-black text-slate-900 line-clamp-2 mt-3 tracking-tight">
           {course.title}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="px-8 pb-8 pt-0 mt-auto">
-        <div className="flex items-center gap-4 text-sm font-black text-slate-400 mb-8 uppercase tracking-widest">
+        <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 mb-8 uppercase tracking-widest">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            {course.student_count || 0} Students
+            <Users className="h-3 w-3" /> {course.student_count || 0} Students
           </div>
           <Dot className="h-4 w-4" />
           <div className="text-slate-900">
-            {parseFloat(course.price) === 0 ? "Free" : `$${course.price}`}
+            {parseFloat(course.price) === 0 ? "Free Access" : `$${course.price}`}
           </div>
         </div>
         
         <div className="flex gap-3">
-          <Button className="flex-1 rounded-2xl font-black h-12 bg-slate-900 hover:bg-primary transition-all shadow-lg shadow-slate-200">
+          <Button 
+            onClick={() => onEdit(course)}
+            className="flex-1 rounded-2xl font-black h-12 bg-slate-900 hover:bg-primary transition-all shadow-lg"
+          >
             Manage Content
           </Button>
           <Button 
             variant="outline" 
             size="icon"
             onClick={onTogglePublish}
-            className={`rounded-2xl h-12 w-12 border-2 ${course.is_published ? "text-slate-400" : "text-emerald-600 border-emerald-100 bg-emerald-50 hover:bg-emerald-100"}`}
+            className={`rounded-2xl h-12 w-12 border-2 transition-colors ${course.is_published ? "text-slate-300 border-slate-100" : "text-emerald-600 border-emerald-100 bg-emerald-50 hover:bg-emerald-100"}`}
           >
             {course.is_published ? <Archive size={20} /> : <Send size={20} />}
           </Button>
@@ -328,11 +344,10 @@ const CourseCard = ({ course, onDelete, onEnroll, onEdit, onTogglePublish }) => 
   );
 };
 
-
 const SubmissionTable = ({ data, onGrade }) => (
   <div className="overflow-x-auto">
     <Table>
-      <TableHeader className="bg-slate-50 border-b">
+      <TableHeader className="bg-slate-50/50 border-b">
         <TableRow className="hover:bg-transparent">
           <TableHead className="font-black text-slate-900 py-6 pl-10 uppercase tracking-widest text-[10px]">Student</TableHead>
           <TableHead className="font-black text-slate-900 py-6 uppercase tracking-widest text-[10px]">Assignment</TableHead>
@@ -342,10 +357,10 @@ const SubmissionTable = ({ data, onGrade }) => (
       </TableHeader>
       <TableBody>
         {data.length > 0 ? data.map((sub) => (
-          <TableRow key={sub.id} className="group hover:bg-slate-50/50 transition-colors border-b-slate-100">
+          <TableRow key={sub.id} className="group hover:bg-slate-50/30 transition-colors border-b-slate-100">
             <TableCell className="py-6 pl-10 font-bold text-slate-900">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black">
+                <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black">
                   {sub.student_name.charAt(0)}
                 </div>
                 {sub.student_name}
@@ -353,7 +368,7 @@ const SubmissionTable = ({ data, onGrade }) => (
             </TableCell>
             <TableCell className="py-6">
               <div className="text-sm font-bold text-slate-800">{sub.task_title}</div>
-              <div className="text-[11px] text-primary font-black uppercase tracking-widest mt-1">
+              <div className="text-[10px] text-primary font-black uppercase tracking-widest mt-1">
                 {sub.course_title}
               </div>
             </TableCell>
@@ -363,7 +378,7 @@ const SubmissionTable = ({ data, onGrade }) => (
                 className={`rounded-lg px-3 py-1 font-bold ${
                   sub.grade 
                     ? "border-emerald-100 text-emerald-700 bg-emerald-50" 
-                    : "border-amber-100 bg-amber-50 text-amber-700 animate-pulse"
+                    : "border-amber-100 bg-amber-50 text-amber-700"
                 }`}
               >
                 {sub.grade ? `Grade: ${sub.grade}%` : "Awaiting Review"}
@@ -372,7 +387,7 @@ const SubmissionTable = ({ data, onGrade }) => (
             <TableCell className="py-6 text-right pr-10">
               <Button 
                 onClick={() => onGrade(sub)} 
-                className="rounded-xl font-bold bg-white border border-slate-200 text-slate-900 hover:bg-primary hover:text-white transition-all shadow-sm"
+                className="rounded-xl font-black bg-white border-2 border-slate-100 text-slate-900 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
               >
                 Open Review
               </Button>
@@ -381,7 +396,7 @@ const SubmissionTable = ({ data, onGrade }) => (
         )) : (
           <TableRow>
             <TableCell colSpan={4} className="text-center py-32 opacity-30 italic font-medium">
-              No submissions to grade currently.
+              No submissions found.
             </TableCell>
           </TableRow>
         )}
@@ -391,7 +406,7 @@ const SubmissionTable = ({ data, onGrade }) => (
 );
 
 const EmptyState = ({ icon, title, description, action }) => (
-  <div className="col-span-full py-32 text-center border-4 border-dashed rounded-[3rem] bg-white border-slate-200/60 shadow-inner shadow-slate-50 flex flex-col items-center">
+  <div className="col-span-full py-32 text-center border-4 border-dashed rounded-[3.5rem] bg-white border-slate-200/60 shadow-inner flex flex-col items-center">
     <div className="mb-6 text-primary p-6 bg-primary/5 rounded-full ring-8 ring-primary/5">
       {React.cloneElement(icon, { size: 56 })}
     </div>
@@ -401,7 +416,7 @@ const EmptyState = ({ icon, title, description, action }) => (
       onClick={action} 
       className="rounded-2xl h-16 px-10 text-lg font-black shadow-2xl shadow-primary/30 transition-all active:scale-95"
     >
-      <Plus className="mr-2 h-6 w-6" /> Create First Course
+      <Plus className="mr-2 h-6 w-6" /> Create Course
     </Button>
   </div>
 );
