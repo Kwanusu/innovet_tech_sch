@@ -10,6 +10,7 @@ from django.utils.encoding import force_bytes, force_str
 from rest_framework.permissions import AllowAny
 from django.core.mail import send_mail
 from django.conf import settings
+from analytics.models import SystemLog
 
 User = get_user_model()
 
@@ -29,6 +30,23 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return RegisterSerializer
         return UserSerializer
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        if instance == request.user:
+            return Response({"error": "Cannot delete self."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        instance.is_active = False
+        instance.save()
+        
+        SystemLog.objects.create(
+            user=request.user,
+            action=f"Archived user: {instance.username}",
+            details=f"User ID {instance.id} marked as inactive."
+        )
+        
+        return Response({"message": "Student archived successfully"}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def me(self, request):
