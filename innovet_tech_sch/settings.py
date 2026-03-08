@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -87,6 +88,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "https://innovet-tech-school.vercel.app",
+    "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
+]
+
+CSRF_TRUSTED_ORIGINS = [
     "https://innovet-tech-school.vercel.app",
     "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
 ]
@@ -191,3 +197,4 @@ AUTH_USER_MODEL = 'tech_school.User'
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
