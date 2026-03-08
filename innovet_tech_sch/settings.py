@@ -52,10 +52,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -96,9 +96,13 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "https://innovet-tech-school-9myn43slc-kwanusu-josephs-projects.vercel.app",
     "https://innovet-tech-school.vercel.app",
-    "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
     "https://innovet-tech-sch.onrender.com",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://innovet-tech-school-.*\.vercel\.app$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
