@@ -27,37 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # Cast string "True" from .env to a Python Boolean True
-import os
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-# 1. DEBUG should be False in production unless explicitly set to True
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-
-# 2. ALLOWED_HOSTS
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-
-# If we are on Render, add the Render External URL
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    ALLOWED_HOSTS.append('innovet-tech-sch.onrender.com')
-
-# 3. CSRF & CORS
-CSRF_TRUSTED_ORIGINS = [
-    "https://innovet-tech-school.vercel.app",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
-]
-
-if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
-    CSRF_TRUSTED_ORIGINS.append("https://innovet-tech-sch.onrender.com")
-
-# Ensure CORS matches your Vercel domains
-CORS_ALLOWED_ORIGINS = [
-    "https://innovet-tech-school.vercel.app",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# Parse a comma-separated string into a Python list
+ALLOWED_HOSTS = ['innovet-tech-sch.onrender.com', 'localhost', '127.0.0.1']
 
 
 
@@ -109,24 +82,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'innovet_tech_sch.wsgi.application'
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",
-#     "http://localhost:5174",
-#     "http://127.0.0.1:5173",
-#     "http://127.0.0.1:5174",
-#     "https://innovet-tech-school.vercel.app",
-#     "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "https://innovet-tech-school.vercel.app",
+    "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
+]
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "http://localhost:5173",
-#     "http://localhost:5174",
-#     "http://127.0.0.1:5173",
-#     "http://127.0.0.1:5174",
-#     "https://innovet-tech-school.vercel.app",
-#     "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
-#     "https://innovet-tech-sch.onrender.com",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "https://innovet-tech-school.vercel.app",
+    "https://innovet-tech-school-72jxint7w-kwanusu-josephs-projects.vercel.app",
+    "https://innovet-tech-sch.onrender.com",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 

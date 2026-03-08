@@ -1,13 +1,21 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  const host = window.location.hostname;
+  try {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
 
-  if (host.includes('vercel.app') || host === 'innovet-tech-school.vercel.app') {
-    return 'https://innovet-tech-sch.onrender.com';
+    if (host.includes('vercel.app') || host === 'innovet-tech-school.vercel.app') {
+      return 'https://innovet-tech-sch.onrender.com/';
+    }
+
+    const envUrl = import.meta?.env?.VITE_API_URL;
+    const finalUrl = envUrl || 'http://127.0.0.1:8000';
+
+    return finalUrl.replace(/\/+$/, '') + '/';
+  } catch (error) {
+    console.error("Critical: getBaseUrl failed, falling back to local.", error);
+    return 'http://127.0.0.1:8000/';
   }
-
-  return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 };
 
 const BASE_URL = getBaseUrl();
@@ -36,7 +44,7 @@ API.interceptors.response.use(
       if (refreshToken) {
         try {
 
-          const response = await axios.post(`${BASE_URL}/api/token/refresh/`, {
+          const response = await axios.post(`${BASE_URL}api/token/refresh/`, {
             refresh: refreshToken
           });
 
