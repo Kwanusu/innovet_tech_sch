@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../../api/axiosConfig'; 
-import { X, Mail, Shield, UserPlus, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Mail, Shield, UserPlus, Loader2, CheckCircle2, Copy, AlertTriangle, Key } from 'lucide-react';
 
 const InviteStaffModal = ({ isOpen, onClose, onRefresh }) => {
   const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ const InviteStaffModal = ({ isOpen, onClose, onRefresh }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [inviteData, setInviteData] = useState(null); // Stores {temp_password, username}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,25 +18,24 @@ const InviteStaffModal = ({ isOpen, onClose, onRefresh }) => {
     setError(null);
 
     try {
-
-      await API.post('api/admin/invite-staff/', formData);
-      setSuccess(true);
-
-      setTimeout(() => {
-        onRefresh();
-        handleClose();
-      }, 1500);
+      const response = await API.post('api/admin/invite-staff/', formData);
+      setInviteData(response.data); // Capture temp_password and username from backend
+      onRefresh(); 
     } catch (err) {
-
       const serverError = err.response?.data;
-      setError(serverError?.detail || serverError?.email?.[0] || "Authorization failed.");
+      setError(serverError?.error || serverError?.detail || "Authorization failed.");
     } finally {
       setLoading(false);
     }
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    // Optional: Add a "Copied!" toast here
+  };
+
   const handleClose = () => {
-    setSuccess(false);
+    setInviteData(null);
     setError(null);
     setFormData({ email: '', full_name: '', role: 'TEACHER' });
     onClose();
@@ -47,23 +46,57 @@ const InviteStaffModal = ({ isOpen, onClose, onRefresh }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
-
+        
         <div className="p-8 pb-4 flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tighter">System Onboarding</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Grant Institutional Credentials</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              {inviteData ? "Credentials Generated" : "Grant Institutional Credentials"}
+            </p>
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
             <X size={20} className="text-slate-400" />
           </button>
         </div>
 
-        {success ? (
-          <div className="p-12 flex flex-col items-center text-center space-y-4 animate-in fade-in zoom-in-90">
-            <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center">
-              <CheckCircle2 size={32} />
+        {inviteData ? (
+          <div className="p-8 space-y-6 animate-in fade-in zoom-in-90">
+            <div className="w-full bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-white text-emerald-500 rounded-2xl flex items-center justify-center shadow-sm mb-4">
+                <CheckCircle2 size={24} />
+              </div>
+              <p className="font-black text-slate-900 uppercase text-[10px] tracking-widest">Access Authorized</p>
+              <p className="text-slate-500 text-xs mt-1 font-medium">Please share these temporary details with the staff member.</p>
             </div>
-            <p className="font-black text-slate-900 uppercase text-xs tracking-widest">Access Authorized</p>
+
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Username</span>
+                  <span className="text-sm font-bold text-slate-900">{formData.email}</span>
+                </div>
+                <button onClick={() => copyToClipboard(formData.email)} className="p-2 hover:bg-white rounded-lg transition-all text-slate-300 hover:text-slate-900">
+                  <Copy size={16} />
+                </button>
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Temporary Password</span>
+                  <span className="text-sm font-mono font-bold text-slate-900 tracking-tight">{inviteData.temp_password}</span>
+                </div>
+                <button onClick={() => copyToClipboard(inviteData.temp_password)} className="p-2 hover:bg-white rounded-lg transition-all text-slate-300 hover:text-slate-900">
+                  <Copy size={16} />
+                </button>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleClose}
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-slate-800 transition-all"
+            >
+              Close Portal
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-8 pt-4 space-y-6">

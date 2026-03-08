@@ -1,10 +1,13 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+  const host = window.location.hostname;
+
+  if (host.includes('vercel.app') || host === 'innovet-tech-school.vercel.app') {
     return 'https://innovet-tech-sch.onrender.com';
   }
-  return import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+  return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 };
 
 const BASE_URL = getBaseUrl();

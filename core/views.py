@@ -16,6 +16,7 @@ from .serializers import (
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework.views import APIView
+import secrets
 
 
 User = get_user_model()
@@ -46,6 +47,36 @@ class AdminDashboardViewSet(viewsets.ViewSet):
             }
         }
         return Response(stats)
+    
+    @action(detail=False, methods=['post'], url_path='invite-staff')
+    def invite_staff(self, request):
+        email = request.data.get('email')
+        role = request.data.get('role', 'staff') 
+
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "User with this email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            temp_password = secrets.token_urlsafe(12)
+            user = User.objects.create_user(
+                email=email,
+                username=email,
+                password=temp_password,
+                is_staff=True,
+                role=role 
+            )
+
+            return Response({
+                "message": f"Invitation sent to {email}",
+                "temp_password": temp_password 
+                
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['get'], url_path='users')
     def list_users(self, request):
