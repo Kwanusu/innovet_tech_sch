@@ -17,6 +17,8 @@ import StudentGrades from './components/student/StudentGrade';
 import BrowseCoursesPage from './components/courses/BrowseCourses';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPasswordConfirm from './pages/PasswordResetConfirm';
 
 function App() {
   const dispatch = useDispatch();
@@ -52,6 +54,8 @@ function App() {
 
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
             <Route path="/courses" element={<BrowseCoursesPage />} />
 
             <Route 
