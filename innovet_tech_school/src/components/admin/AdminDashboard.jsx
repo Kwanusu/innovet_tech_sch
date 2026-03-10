@@ -217,9 +217,9 @@ const UserRow = ({ user }) => (
     <td className="p-6">
       <div className="flex items-center gap-3">
         <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${user.avg_progress || 0}%` }} />
+          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${user.avg_progress || user.avProgress || 0 }%` }} />
         </div>
-        <span className="text-[11px] font-black text-slate-900">{user.avg_progress || 0}%</span>
+        <span className="text-[11px] font-black text-slate-900">{user.avg_progress || user.avProgress || 0}%</span>
       </div>
     </td>
     <td className="p-6 text-right">
